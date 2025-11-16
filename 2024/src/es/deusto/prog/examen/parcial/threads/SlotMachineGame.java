@@ -8,6 +8,7 @@ import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -24,6 +25,8 @@ public class SlotMachineGame extends JFrame {
 	private static final long serialVersionUID = 1L;
 
 	private JLabel[] slots;
+	private Thread[] threads;
+	private boolean premioObtenido = false;
 	private JButton startButton = new JButton("Iniciar");
 	private JButton stopButton = new JButton("Parar");
 
@@ -41,6 +44,11 @@ public class SlotMachineGame extends JFrame {
 		}
 
 		startButton.addActionListener(e -> {
+			if (premioObtenido) {
+				JOptionPane.showMessageDialog(this, "¡Ya has ganado un abono mensual, no puedes seguir jugando!", "Ya premiado", JOptionPane.INFORMATION_MESSAGE);
+				return;
+			}
+			
 			startButton.setEnabled(false);
 			stopButton.setEnabled(true);
 			startGame();			
@@ -50,6 +58,7 @@ public class SlotMachineGame extends JFrame {
 			stopButton.setEnabled(false);
 			startButton.setEnabled(true);
 			stopGame();
+			
 		});
 		
 		stopButton.setEnabled(false);
@@ -80,16 +89,37 @@ public class SlotMachineGame extends JFrame {
 
 	// TODO: Tarea 4: Iniciar el juego
 	private void startGame() {
-
-
+		threads = new Thread[3];
+		for (int i = 0; i < threads.length; i++) {
+			final int slotIndex = i;
+			threads[i] = new Thread(()->{
+				
+				while(!Thread.currentThread().isInterrupted()) {
+					int r = ThreadLocalRandom.current().nextInt(0, actividades.size());
+					actualizarLabel(slots[slotIndex], actividades.get(r));
+					
+					try {
+						Thread.sleep(100);
+					} catch (InterruptedException ex) {
+						Thread.currentThread().interrupt();
+						break;
+					}
+				}
+			});
+			threads[i].start();
+		}
 	}
 
 	// TODO: Tarea 4: Detener el juego
 	private void stopGame() {
+		for (int i = 0; i < threads.length; i++) {
+			threads[i].interrupt();
+		}
 		
 		// Verificar si todas las imágenes son iguales
 		if (checkWin()) {
 			JOptionPane.showMessageDialog(this, "¡Felicidades! ¡Has ganado un abono mensual!", "Premio", JOptionPane.INFORMATION_MESSAGE);
+			premioObtenido = true;
 		} else {
 			JOptionPane.showMessageDialog(this, "¡Lo siento! Inténtalo de nuevo.", "Otra vez será", JOptionPane.INFORMATION_MESSAGE);
 		}

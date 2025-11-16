@@ -6,11 +6,19 @@ package es.deusto.prog.examen.parcial.render;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.Font;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.util.List;
 
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JTable;
+import javax.swing.SwingConstants;
+import javax.swing.table.TableCellRenderer;
 
 import es.deusto.prog.examen.parcial.Actividad;
 
@@ -20,21 +28,84 @@ public class HorarioGimnasioJTable extends JFrame {
     
     public HorarioGimnasioJTable(List<Actividad> actividades) {
     	this.actividades = actividades;
-    	
-		//TODO: TAREA 2: Modificar el modelo de datos y renderizado de la tabla de actividades.
-        String[] columnNames = {"", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes"};
-        String[][] data = {
-            {"09:00", "Yoga", "", "Yoga", "", ""},
-            {"10:00", "", "Pilates", "", "Pilates", ""},
-            {"11:00", "", "Zumba", "", "Zumba", ""},
-            {"12:00", "Boxeo", "", "", "", "Boxeo"},
-            {"13:00", "Spinning", "", "Spinning", "", "Spinning"}
-        };
+    	        
+        HorarioGimnasioModel modeloTabla = new HorarioGimnasioModel(this.actividades);
+        
+        JTable tablaActividades = new JTable(modeloTabla);
+        
+		tablaActividades.setShowGrid(false);
+		tablaActividades.getTableHeader().setReorderingAllowed(false);
+		tablaActividades.setRowHeight(64);
+		
+		TableCellRenderer headerRenderer = new TableCellRenderer() {
+			
+			@Override
+			public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
+					int row, int column) {
+				JLabel result = new JLabel(value.toString());
+				
+				result.setHorizontalAlignment(JLabel.CENTER);
+				result.setFont(new Font("Arial", Font.BOLD, 18));
+				result.setBackground(Color.WHITE);
+				result.setOpaque(true);
+				
+				return result;
+			}
+		};
+		
+		tablaActividades.getTableHeader().setDefaultRenderer(headerRenderer);
+		
+		TableCellRenderer cellRenderer = new TableCellRenderer() {
+			
+			@Override
+			public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
+					int row, int column) {
+				JLabel result = new JLabel();
+				
+				if(column == 0) {
+					result.setFont(new Font("Arial", Font.BOLD, 18));
+					result.setHorizontalAlignment(JLabel.CENTER);
+					result.setText((String) value);
+				}
+				else if (value instanceof Actividad) {
+					Actividad actividad = (Actividad) value;
+					String imgName = actividad.getTipo().toString().toLowerCase() + ".png";
+					String imagePath = "resources/images/" + imgName;
+					result.setIcon(new ImageIcon(imagePath));
+					result.setBackground(actividad.getTipo().getColor());
+					result.setToolTipText(actividad.getTipo().toString());
+					result.setHorizontalAlignment(JLabel.CENTER);
+					result.setOpaque(true);
+				}
+				else {
+					result.setText("");
+				}
+				return result;
+			}
+		};
 
-        JTable tablaActividades = new JTable(data, columnNames);                       
+        tablaActividades.setDefaultRenderer(Object.class, cellRenderer);
         
-        //TODO: TAREA 3: Mostrar un mensaje de confirmación para cerrar de la aplicación al pulsar CTRL + E.
-        
+        KeyAdapter keyAdapt = new KeyAdapter() {
+        	@Override
+            public void keyPressed(KeyEvent e) {
+        		if(e.getKeyCode() == KeyEvent.VK_E && e.isControlDown()) {
+        			 int result = JOptionPane.showConfirmDialog(
+                             null,
+                             "¿Estás seguro de que quieres salir?",
+                             "Confirmación de salida",
+                             JOptionPane.YES_NO_OPTION,
+                             JOptionPane.QUESTION_MESSAGE);
+        			 
+        			 if (result == JOptionPane.YES_OPTION) {
+                         System.exit(0);
+                     }
+        		}
+        	}
+		};
+		
+		tablaActividades.addKeyListener(keyAdapt);
+		
 		this.add(tablaActividades.getTableHeader(), BorderLayout.NORTH);
 		this.add(tablaActividades, BorderLayout.CENTER);
 
