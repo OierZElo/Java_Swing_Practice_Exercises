@@ -150,7 +150,7 @@ public class JFrameCheckIn extends JFrame {
 						label.setBackground(new Color(252, 191, 183));
 						break;
 					default:
-						label.setBackground(table.getBackground());
+						label.setBackground(new Color(237, 237, 237));
 					}
 				}
 				else {
@@ -173,5 +173,6 @@ public class JFrameCheckIn extends JFrame {
 				}
 			}
 		};
+		this.seatsTable.addKeyListener(keyEvent);
 	}
 }
